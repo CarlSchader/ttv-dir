@@ -1,5 +1,5 @@
 use clap::Parser;
-use std::{fs, collections::HashMap};
+use std::{fs, cmp::min, collections::HashMap};
 use rand::prelude::*;
 
 /// Rust program that splits a directory full of files into train test and validation subdirs
@@ -15,13 +15,13 @@ struct Cli {
     /// Output directory, if not provided operation will happen in place
     output_dir: Option<String>,
 
-    /// Test dir size, if not provided test dir will be 20% of input dir
+    /// Test dir size, this should be a ratio between 0.0 and 1.0, if not provided test dir will be 20% of input dir
     #[arg(short, long)]
-    test: Option<u32>,
+    test: Option<f32>,
 
-    /// Validation dir size, if not provided val dir will not be created
+    /// Validation dir size, this should be a ratio between 0.0 and 1.0, if not provided val dir will not be created
     #[arg(short, long)]
-    val: Option<u32>,
+    val: Option<f32>,
 
     /// DatasetDirectory: If the directory is a pytorch dataset directory
     #[arg(short, long, default_value = "false")]
@@ -92,13 +92,13 @@ fn main() {
 
     let test_size: u32;
     match cli.test {
-        Some(test) => test_size = test,
+        Some(test) => test_size = min((files.len() as f32 * test) as u32, files.len() as u32),
         None => test_size = (files.len() as f32 * 0.2) as u32,
     }
 
     let val_size: u32;
     match cli.val {
-        Some(val) => val_size = val,
+        Some(val) => val_size = min((files.len() as f32 * val) as u32, files.len() as u32),
         None => val_size = 0,
     }
 
